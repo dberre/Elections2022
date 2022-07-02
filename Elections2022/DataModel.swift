@@ -27,76 +27,75 @@ struct PoolingResult: Identifiable {
 }
 
 final class DataModel: ObservableObject {
-    
-    private var dataFrame: DataFrame? = nil
-    
-    @Published var state = LoadingState.idle
-    
+
     enum LoadingState {
         case idle
         case loading
         case error(String)
         case complete
     }
-    
-    var dataTable: DataFrame {
-        get { dataFrame ?? DataFrame() }
-    }
 
-    let columns: [String] = [
-        DeptNumID.name,
-        DeptNameID.name,
-        CircoCodeID.name,
-        CityNameID.name,
-        InscritsID.name,
-        AbsPercentID.name,
-        VotantsID.name,
-        Nom1ID.name,
-        Nuance1ID.name,
-        Voix1ID.name,
-        VoixVsExp1ID.name,
-        Nom2ID.name,
-        Nuance2ID.name,
-        Voix2ID.name,
-        VoixVsExp2ID.name,
-        Nom3ID.name,
-        Nuance3ID.name,
-        Voix3ID.name,
-        VoixVsExp3ID.name
-    ]
-    
-    // defines the columns (named by their header) and their types to extract
-    private static let DeptNumID = ColumnID("DeptNum", String.self)
-    private static let DeptNameID = ColumnID("DeptName", String.self)
-    private static let DeptID = ColumnID("Dept", String.self)
-    private static let CircoCodeID = ColumnID("CircoCode", Int.self)
-    private static let CityNameID = ColumnID("CityName", String.self)
-    private static let InscritsID = ColumnID("Inscrits", String.self)
-    private static let AbsPercentID  = ColumnID("AbsPercent", Double.self)
-    private static let VotantsID = ColumnID("Votants", Int.self)
-    private static let Nom1ID = ColumnID("Nom1", String.self)
-    private static let Nuance1ID = ColumnID("Nuance1", String.self)
-    private static let Voix1ID = ColumnID("Voix1", Int.self)
-    private static let VoixVsExp1ID  = ColumnID("VoixVsExp1", Double.self)
-    private static let Nom2ID = ColumnID("Nom2", String.self)
-    private static let Nuance2ID = ColumnID("Nuance2", String.self)
-    private static let Voix2ID = ColumnID("Voix2", Int.self)
-    private static let VoixVsExp2ID  = ColumnID("VoixVsExp2", Double.self)
-    private static let Nom3ID = ColumnID("Nom3", String.self)
-    private static let Nuance3ID = ColumnID("Nuance3", String.self)
-    private static let Voix3ID = ColumnID("Voix3", Int.self)
-    private static let VoixVsExp3ID  = ColumnID("VoixVsExp3", Double.self)
-    
-    private let fileUrl = Bundle.main.url(forResource: "Resultats2eFull", withExtension: "csv")!
-    
+    @Published var state = LoadingState.idle
 
+    private var dataFrame: DataFrame? = nil
+            
+    private let fileUrl = Bundle.main.url(forResource: "Resultats2eTrunc", withExtension: "csv")!
+    
+    // defines all the coulumns to extract from the CSV file (which contains much more)
+    // The string is the Header text in the CSV file. The type is the decoding type
+    private let deptNumID = ColumnID("DeptNum", String.self)
+    private let deptNameID = ColumnID("DeptName", String.self)
+    private let deptID = ColumnID("Dept", String.self)
+    private let circoCodeID = ColumnID("CircoCode", Int.self)
+    private let cityNameID = ColumnID("CityName", String.self)
+    private let inscritsID = ColumnID("Inscrits", String.self)
+    private let absPercentID  = ColumnID("AbsPercent", Double.self)
+    private let exprID = ColumnID("Expr", Int.self)
+    private let nom1ID = ColumnID("Nom1", String.self)
+    private let nuance1ID = ColumnID("Nuance1", String.self)
+    private let voix1ID = ColumnID("Voix1", Int.self)
+    private let voixVsExp1ID  = ColumnID("VoixVsExp1", Double.self)
+    private let nom2ID = ColumnID("Nom2", String.self)
+    private let nuance2ID = ColumnID("Nuance2", String.self)
+    private let voix2ID = ColumnID("Voix2", Int.self)
+    private let voixVsExp2ID  = ColumnID("VoixVsExp2", Double.self)
+    private let nom3ID = ColumnID("Nom3", String.self)
+    private let nuance3ID = ColumnID("Nuance3", String.self)
+    private let voix3ID = ColumnID("Voix3", Int.self)
+    private let voixVsExp3ID  = ColumnID("VoixVsExp3", Double.self)
+
+    // defines an array of columns names. Used only by DataFrame() for reading the CSV
+    private var columns: [String] { [
+        deptNumID.name,
+        deptNameID.name,
+        circoCodeID.name,
+        cityNameID.name,
+        inscritsID.name,
+        absPercentID.name,
+        exprID.name,
+        nom1ID.name,
+        nuance1ID.name,
+        voix1ID.name,
+        voixVsExp1ID.name,
+        nom2ID.name,
+        nuance2ID.name,
+        voix2ID.name,
+        voixVsExp2ID.name,
+        nom3ID.name,
+        nuance3ID.name,
+        voix3ID.name,
+        voixVsExp3ID.name
+    ]}
+    
     var departments: [String] {
         guard let dataFrame = dataFrame else { return [] }
         
-        let df = dataFrame[Self.DeptID.name].compactMap { dept in
+        // extract the department column to a array of Strings
+        let df = dataFrame[deptID.name].compactMap { dept in
             (dept as? String)
         }
         
+        // remove duplicates and return a sorted array
         return Array(Set(df)).sorted()
     }
     
@@ -104,8 +103,9 @@ final class DataModel: ObservableObject {
         guard let dataFrame = dataFrame else { return [] }
         guard let department = department else { return [] }
         
+        // first filter on the department and then extract the city to an array of Strings
         return dataFrame
-            .filter(on: Self.DeptID.name, String.self) { dept in
+            .filter(on: deptID.name, String.self) { dept in
                 dept == department
             } ["CityName"].map { name in
                 name as? String ?? ""
@@ -115,23 +115,24 @@ final class DataModel: ObservableObject {
     func circos(for department: String) -> [Int] {
         guard let dataFrame = dataFrame else { return [] }
         
+        // first filter on the department and then extract the circo to an array of Strings
         let result = dataFrame
-            .filter(on: Self.DeptID.name, String.self) { dept in
+            .filter(on: deptID.name, String.self) { dept in
                 dept == department
             } ["CircoCode"].map { name in
                 name as? Int ?? 0
             }
-        
+        // remove duplicates and return a sorted array
         return Array(Set(result)).sorted()
     }
         
     func arrayOfResult(for row: DataFrame.Row) -> [CandidateResult] {
         var ar = [CandidateResult]()
-        ar.append(CandidateResult(name: row[DataModel.Nom1ID]!, group: row[DataModel.Nuance1ID]!, votes: row[DataModel.Voix1ID]!, votesVsExpr: row[DataModel.VoixVsExp1ID]!))
-        if (row[DataModel.Nom2ID] != nil) {
-            ar.append(CandidateResult(name: row[DataModel.Nom2ID]!, group: row[DataModel.Nuance2ID]!, votes: row[DataModel.Voix2ID]!, votesVsExpr: row[DataModel.VoixVsExp2ID]!))
-            if (row[DataModel.Nom3ID] != nil) {
-                ar.append(CandidateResult(name: row[DataModel.Nom3ID]!, group: row[DataModel.Nuance3ID]!, votes: row[DataModel.Voix3ID]!, votesVsExpr: row[DataModel.VoixVsExp3ID]!))
+        ar.append(CandidateResult(name: row[nom1ID]!, group: row[nuance1ID]!, votes: row[voix1ID]!, votesVsExpr: row[voixVsExp1ID]!))
+        if (row[nom2ID] != nil) {
+            ar.append(CandidateResult(name: row[nom2ID]!, group: row[nuance2ID]!, votes: row[voix2ID]!, votesVsExpr: row[voixVsExp2ID]!))
+            if (row[nom3ID] != nil) {
+                ar.append(CandidateResult(name: row[nom3ID]!, group: row[nuance3ID]!, votes: row[voix3ID]!, votesVsExpr: row[voixVsExp3ID]!))
             }
         }
         return ar
@@ -143,9 +144,9 @@ final class DataModel: ObservableObject {
         guard let department = department, let city = city else { return [ ] }
         
         return dataFrame
-            .filter(on: Self.DeptID.name, String.self) { dept in
+            .filter(on: deptID.name, String.self) { dept in
                 dept == department
-            }.filter(on: Self.CityNameID.name, String.self) { value in
+            }.filter(on: cityNameID.name, String.self) { value in
                 value == city
             }
             .rows.map { row in
@@ -153,8 +154,8 @@ final class DataModel: ObservableObject {
                     department: department,
                     circoCode: 2,
                     cityName: "",
-                    votants: row[DataModel.VotantsID]!,
-                    abstention: row[DataModel.AbsPercentID]!,
+                    votants: row[exprID]!,
+                    abstention: row[absPercentID]!,
                     results: arrayOfResult(for: row)
                 )
             }
@@ -166,24 +167,21 @@ final class DataModel: ObservableObject {
         guard let department = department, let circoCode = circoCode else { return [ ] }
                 
         return dataFrame
-            .filter(on: Self.DeptID.name, String.self) { dept in
+            .filter(on: deptID.name, String.self) { dept in
                 dept == department
-            }.filter(on: Self.CircoCodeID.name, Int.self) { value in
+            }.filter(on: circoCodeID.name, Int.self) { value in
                 value == circoCode
             }
             .rows.map { row in
                 PoolingResult(
                     department: department,
                     circoCode: circoCode,
-                    cityName: row[DataModel.CityNameID]!,
-                    votants: row[DataModel.VotantsID]!,
-                    abstention: row[DataModel.AbsPercentID]!,
+                    cityName: row[cityNameID]!,
+                    votants: row[exprID]!,
+                    abstention: row[absPercentID]!,
                     results: arrayOfResult(for: row)
                 )
             }
-    }
-    
-    init() {
     }
     
     func loadAsync(completion: @escaping (DataModel.LoadingState) -> Void) {
@@ -204,36 +202,37 @@ final class DataModel: ObservableObject {
         }
     }
     
+    // Defines the type of the Error reported when reading the CSV fails
     private struct LoadFileError: Error {
         let message: String
-        
     }
             
     private func loadCsv(_ url: URL) -> Result<DataFrame, LoadFileError> {
         
         // define the columns type (for speeding up parsing and raise early types errors)
         let types: [String: CSVType] = [
-            "DeptNum": .string,
-            "DeptName": .string,
-            "CircoCode": .integer,
-            "CityName": .string,
-            "Inscrits": .integer,
-            "AbsPercent": .string,
-            "Votants": .integer,
-            "Nom1": .string,
-            "Nuance1": .string,
-            "Voix1": .integer,
-            "VoixVsExp1": .string,
-            "Nom2": .string,
-            "Nuance2": .string,
-            "Voix2": .integer,
-            "VoixVsExp2": .string,
-            "Nom3": .string,
-            "Nuance3": .string,
-            "Voix3": .integer,
-            "VoixVsExp3": .string
+            deptNumID.name: .string,
+            deptNameID.name: .string,
+            circoCodeID.name: .integer,
+            cityNameID.name: .string,
+            inscritsID.name: .integer,
+            absPercentID.name: .string,
+            exprID.name: .integer,
+            nom1ID.name: .string,
+            nuance1ID.name: .string,
+            voix1ID.name: .integer,
+            voixVsExp1ID.name: .string,
+            nom2ID.name: .string,
+            nuance2ID.name: .string,
+            voix2ID.name: .integer,
+            voixVsExp2ID.name: .string,
+            nom3ID.name: .string,
+            nuance3ID.name: .string,
+            voix3ID.name: .integer,
+            voixVsExp3ID.name: .string
         ]
         
+        // defines some options to successfully read the CSV file
         let options = CSVReadingOptions(
             hasHeaderRow: true,
             nilEncodings: ["", "nil"],
@@ -242,32 +241,28 @@ final class DataModel: ObservableObject {
         )
         
         do {
-            // some options for decoding properly the file
+            // read the CSV file
             var data = try DataFrame(
                 contentsOfCSVFile: url,
                 columns: columns,
                 types: types,
                 options: options)
-
             
-            // a formatter for decoding the floating point numbers which have "," in the file
+            // formatter used later on for decoding the floating point numbers which have "," in the file
             let numberFormatter = NumberFormatter()
             numberFormatter.decimalSeparator = ","
 
-            // format this column to have always a 2 digit number with leading 0 when needed
-            data.transformColumn("DeptNum") { (deptNum: String) -> String in
-                if let num = Int(deptNum) {
-                    return String(format: "%02d", num)
+            // merge the department number and name coulumns to a single column. Content is "deptNum - deptName"
+            // the deptNum is formatted to have always a 2 digit number with leading 0 when needed
+            data.combineColumns(deptNumID.name, deptNameID.name, into: deptID.name) { (col1: String?, col2: String?) -> String in
+                if let col1 = col1, let num = Int(col1) {
+                    return String(format: "%02d - %@", num, col2 ?? "")
                 }
-                return deptNum
-            }
-            
-            data.combineColumns(Self.DeptNumID.name, Self.DeptNameID.name, into: Self.DeptID.name) { (col1: String?, col2: String?) in
-                "\(col1 ?? "?") - \(col2 ?? "?")"
+                return "\(col1 ?? "?") - \(col2 ?? "")"
             }
             
             // convert from String to Double some columns
-            for column in ["AbsPercent", "VoixVsExp1", "VoixVsExp2", "VoixVsExp3"] {
+            for column in [absPercentID.name, voixVsExp1ID.name, voixVsExp2ID.name, voixVsExp3ID.name] {
                 data.transformColumn(column) { (from: String) -> Double in
                     numberFormatter.number(from: from)?.doubleValue ?? 0.0
                 }

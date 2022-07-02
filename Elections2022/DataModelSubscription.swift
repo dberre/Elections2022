@@ -9,40 +9,48 @@ import Foundation
 import Combine
 import TabularData
 
+// Defines a Publisher to extract asynchronously the result of a request on the whole data
 struct DataModelPublisher: Publisher {
     let dataModel: DataModel
     let department: String
     let circo: Int
     
     typealias Output = [PoolingResult]
-    
-    typealias Failure = Error
+    typealias Failure = Never
     
     func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, [PoolingResult] == S.Input {
         let subscription = DataModelSubscription(
             dataModel: dataModel,
             department: department,
             circo: circo,
-            downStream: subscriber,
-            combineIdentifier: CombineIdentifier())
+            suscriber: subscriber)
         
         subscriber.receive(subscription: subscription)
     }
 
-    struct DataModelSubscription<DownStream: Subscriber>: Subscription where DownStream.Input == [PoolingResult]  {
+    final class DataModelSubscription<S: Subscriber>: Subscription where S.Input == [PoolingResult]  {
         let dataModel: DataModel
         let department: String
         let circo: Int
-        let downStream: DownStream
-        var combineIdentifier: CombineIdentifier
+        var suscriber: S?
+        
+        internal init(dataModel: DataModel, department: String, circo: Int, suscriber: S? = nil) {
+            self.dataModel = dataModel
+            self.department = department
+            self.circo = circo
+            self.suscriber = suscriber
+        }
 
         func request(_ demand: Subscribers.Demand) {
-            let extract = dataModel.result(department: department, circoCode: circo)
-            _ = downStream.receive(extract)
+            if demand > 0 {
+                let extract = dataModel.result(department: department, circoCode: circo)
+                _ = suscriber?.receive(extract)
+                suscriber?.receive(completion: .finished)
+            }
         }
         
         func cancel() {
-            // not cancellable
+            suscriber = nil
         }
     }
 }

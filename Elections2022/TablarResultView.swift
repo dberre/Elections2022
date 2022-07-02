@@ -18,6 +18,7 @@ struct TablarResultView: View {
     
     @State private var cancellables = Set<AnyCancellable>()
     
+    // Fill the first row on the table (which contains heading information)
     @ViewBuilder
     private var headerRow: some View {
         Text("Commune")
@@ -53,12 +54,13 @@ struct TablarResultView: View {
         }
     }
     
+    // Fill one row of the results area of the table
     @ViewBuilder
     private func ResultsRow(_ row: PoolingResult) -> some View {
         Text(row.cityName)
         Text(String(row.votants))
         Text(String(row.abstention))
-        Text(String(row.results[0].votes))
+        Text(String(row.results[0].votesVsExpr))
         if row.results.count > 1 {
             Text(String(row.results[1].votesVsExpr))
         } else {
@@ -71,6 +73,7 @@ struct TablarResultView: View {
         }
     }
     
+    // Fill the bottom row of the table (which contains total information)
     @ViewBuilder
     private var bottomRow: some View {
         Text("")
@@ -81,7 +84,7 @@ struct TablarResultView: View {
         Text(totalVotesVsExpr(candidate: 2))
     }
     
-    private var resultView: some View {
+    private var resultsView: some View {
         ScrollView(.horizontal) {
             LazyVGrid(columns: gridColumns) {
                 headerRow
@@ -102,6 +105,7 @@ struct TablarResultView: View {
     
     var body: some View {
         if data.isEmpty {
+            // When data is not ready, display a progress view
             ProgressView()
                 .onAppear {
                     DataModelPublisher(dataModel: dataModel, department: department, circo: circo)
@@ -115,10 +119,12 @@ struct TablarResultView: View {
                         .store(in: &cancellables)
                 }
         } else {
-            resultView
+            // Data is ready, display the results in table
+            resultsView
         }
     }
     
+    // defines the columns for the LazyVGrid
     private let gridColumns: [GridItem] = [
         .init(.fixed(200), alignment: .leading),  // City
         .init(.fixed(60), alignment: .center),  // Votant
@@ -128,6 +134,7 @@ struct TablarResultView: View {
         .init(.fixed(150), alignment: .center),  // result3
     ]
     
+    // Computes the total of one column and format according to the table presentation
     private func totalVotesVsExpr(candidate: Int) -> String {
         guard let total = totalExprimes(), let votes = totalVotes(candidate: candidate) else { return "" }
         guard total > 0 else { return "" }
