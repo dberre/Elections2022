@@ -14,8 +14,7 @@ struct DepartmentView: View {
     @State private var selection: Int? = nil
     
     var circos: [Int] {
-        print("get circo")
-        return dataModel.circos(for: department)
+        dataModel.circos(for: department)
     }
     
     var body: some View {

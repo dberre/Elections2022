@@ -39,7 +39,7 @@ final class DataModel: ObservableObject {
 
     private var dataFrame: DataFrame? = nil
             
-    private let fileUrl = Bundle.main.url(forResource: "Resultats2eTrunc", withExtension: "csv")!
+    private let fileUrl = Bundle.main.url(forResource: "Resultats2eFull", withExtension: "csv")!
     
     // defines all the coulumns to extract from the CSV file (which contains much more)
     // The string is the Header text in the CSV file. The type is the decoding type
@@ -86,6 +86,16 @@ final class DataModel: ObservableObject {
         voix3ID.name,
         voixVsExp3ID.name
     ]}
+    
+    // this method return a list of all the entries from the CSV file
+    // an entry is a triple (department, circo, city)
+    func entries() -> [(department: String, circo: Int, city: String)] {
+        guard let dataFrame = dataFrame else { return [] }
+
+        return dataFrame.rows.map { row in
+            (row[deptID]!, row[circoCodeID]!, row[cityNameID]!)
+        }
+    }
     
     var departments: [String] {
         guard let dataFrame = dataFrame else { return [] }

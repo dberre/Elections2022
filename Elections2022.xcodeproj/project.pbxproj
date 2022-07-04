@@ -19,6 +19,8 @@
 		37476F64286DCA6A000DB6EE /* TablarResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37476F63286DCA6A000DB6EE /* TablarResultView.swift */; };
 		37476F66286DCC86000DB6EE /* DepartmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37476F65286DCC86000DB6EE /* DepartmentView.swift */; };
 		37476F68286DDDDD000DB6EE /* Resultats2eFull.csv in Resources */ = {isa = PBXBuildFile; fileRef = 37476F67286DDDDD000DB6EE /* Resultats2eFull.csv */; };
+		379051FA28707F74002C87F9 /* AutoCompleteObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379051F928707F74002C87F9 /* AutoCompleteObject.swift */; };
+		379051FC28707FFE002C87F9 /* TrieDatastruct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379051FB28707FFE002C87F9 /* TrieDatastruct.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +48,8 @@
 		37476F63286DCA6A000DB6EE /* TablarResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TablarResultView.swift; sourceTree = "<group>"; };
 		37476F65286DCC86000DB6EE /* DepartmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepartmentView.swift; sourceTree = "<group>"; };
 		37476F67286DDDDD000DB6EE /* Resultats2eFull.csv */ = {isa = PBXFileReference; lastKnownFileType = text; name = Resultats2eFull.csv; path = data/Resultats2eFull.csv; sourceTree = SOURCE_ROOT; };
+		379051F928707F74002C87F9 /* AutoCompleteObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCompleteObject.swift; sourceTree = "<group>"; };
+		379051FB28707FFE002C87F9 /* TrieDatastruct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrieDatastruct.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +98,8 @@
 				37476F63286DCA6A000DB6EE /* TablarResultView.swift */,
 				370D5E29286C2E51008028EA /* DataModel.swift */,
 				371B59CE286EAC73002323B2 /* DataModelSubscription.swift */,
+				379051F928707F74002C87F9 /* AutoCompleteObject.swift */,
+				379051FB28707FFE002C87F9 /* TrieDatastruct.swift */,
 				37476F61286D8704000DB6EE /* Resultats2eTrunc.csv */,
 				37476F67286DDDDD000DB6EE /* Resultats2eFull.csv */,
 				370D5E1D286C2C7C008028EA /* Assets.xcassets */,
@@ -221,7 +227,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				370D5E1C286C2C7C008028EA /* ContentView.swift in Sources */,
+				379051FC28707FFE002C87F9 /* TrieDatastruct.swift in Sources */,
 				370D5E2A286C2E51008028EA /* DataModel.swift in Sources */,
+				379051FA28707F74002C87F9 /* AutoCompleteObject.swift in Sources */,
 				37476F66286DCC86000DB6EE /* DepartmentView.swift in Sources */,
 				37476F64286DCA6A000DB6EE /* TablarResultView.swift in Sources */,
 				370D5E28286C2CB9008028EA /* MainView.swift in Sources */,

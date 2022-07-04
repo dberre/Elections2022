@@ -12,41 +12,53 @@ struct MainView: View {
     
     @State private var selection: String? = nil
     @State private var searchText: String = ""
-    
-    @State private var suggestions: [String] = []
+        
+    @StateObject private var autoCompleteObject = AutoCompleteObject()
     
     var body: some View {
         NavigationView {
             VStack {
-                List {
-                    ForEach(dataModel.departments, id: \.self) { dept in
-                        NavigationLink(tag: dept, selection: $selection) {
-                            DepartmentView(department: dept)
-                        } label: {
-                            Text(dept)
+                if searchText.isEmpty {
+                    List {
+                        ForEach(dataModel.departments, id: \.self) { dept in
+                            NavigationLink(tag: dept, selection: $selection) {
+                                DepartmentView(department: dept)
+                            } label: {
+                                Text(dept)
+                            }
                         }
+                    }
+                } else {
+                    if !autoCompleteObject.suggestions.isEmpty {
+                        List {
+                            ForEach(autoCompleteObject.suggestions.prefix(15), id: \.self) { suggestion in
+                                NavigationLink {
+                                    TablarResultView(department: suggestion.department, circo: suggestion.circo)
+                                } label: {
+                                    Text("\(suggestion.city) -  \(suggestion.department)")
+                                }
+                            }
+                            let remainder = autoCompleteObject.suggestions.count
+                            if remainder > 15 {
+                                Text("\(remainder - 15) more ...")
+                            }
+                        }
+                    } else {
+                        Text("No result")
                     }
                 }
             }
             
             Text("Select one department from the list")
         }
-        .searchable(text: $searchText) {
-            suggestionView
+        .searchable(text: $searchText) { }
+        .disableAutocorrection(true)
+        .autocapitalization(.none)
+        .onChange(of: searchText) { newValue in
+            autoCompleteObject.autocomplete(newValue)
         }
-        .onSubmit(of: .search) {
-            // TODO : build suggestion using the search
-        }
-    }
-    
-    @ViewBuilder
-    private var suggestionView: some View {
-        if suggestions.isEmpty {
-            ForEach(suggestions, id: \.self) {
-                Text($0)
-            }
-        } else {
-            Text("No result")
+        .onAppear {
+            autoCompleteObject.update(dataModel: dataModel)
         }
     }
 }

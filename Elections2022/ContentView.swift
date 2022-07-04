@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @ObservedObject private var dataModel = DataModel()
+    @StateObject private var dataModel = DataModel()
         
     var body: some View {
         switch dataModel.state {
