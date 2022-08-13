@@ -13,7 +13,7 @@ struct MainView: View {
     @State private var selection: String? = nil
     @State private var searchText: String = ""
         
-    @StateObject private var autoCompleteObject = AutoCompleteObject()
+    @StateObject private var autoCompleteObject = AutoCompleteObject<RadixTree>()
     
     var body: some View {
         NavigationView {
@@ -35,7 +35,7 @@ struct MainView: View {
                                 NavigationLink {
                                     TablarResultView(department: suggestion.department, circo: suggestion.circo)
                                 } label: {
-                                    Text("\(suggestion.city) -  \(suggestion.department)")
+                                    Text("\(suggestion.city) - \(suggestion.department)")
                                 }
                             }
                             let remainder = autoCompleteObject.suggestions.count
@@ -57,8 +57,9 @@ struct MainView: View {
         .onChange(of: searchText) { newValue in
             autoCompleteObject.autocomplete(newValue)
         }
-        .onAppear {
-            autoCompleteObject.update(dataModel: dataModel)
+        .task {
+            await autoCompleteObject.update(dataModel: dataModel)
+            print("Leave task bloc")
         }
     }
 }

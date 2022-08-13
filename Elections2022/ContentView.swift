@@ -11,6 +11,7 @@ struct ContentView: View {
     @StateObject private var dataModel = DataModel()
         
     var body: some View {
+        EmptyView()
         switch dataModel.state {
         case .loading:
             ProgressView()
@@ -21,7 +22,7 @@ struct ContentView: View {
             Text("Welcome to Election 2022")
                 .onAppear {
                     dataModel.loadAsync { _ in
-                        print("loaded")
+                        print("Data model loaded")
                     }
                 }
         default:

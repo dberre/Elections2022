@@ -24,7 +24,7 @@ struct TablarResultView: View {
         Text("Commune")
         Text("Votants")
         Text("Abstention")
-        // next 3 hearders are not a static text and are extracted from the first row of data
+        // next 3 headers are not a static text and are extracted from the first row of data
         if data.count > 0 {
             let resu = data[0].results[0]
             VStack(alignment: .center) {

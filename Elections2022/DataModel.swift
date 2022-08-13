@@ -208,8 +208,19 @@ final class DataModel: ObservableObject {
                     self.dataFrame = nil
                     self.state = .error(error.message)
                 }
+                completion(self.state)
             }
         }
+    }
+    
+    func loadSync() throws {
+        let result = loadCsv(fileUrl)
+        switch result {
+        case .success(let data):
+            self.dataFrame = data
+        case .failure(let error):
+            throw LoadFileError(message: "failed to load the url: \(fileUrl.absoluteString). \(error.message)")
+        }        
     }
     
     // Defines the type of the Error reported when reading the CSV fails

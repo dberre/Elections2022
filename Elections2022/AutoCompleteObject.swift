@@ -25,54 +25,54 @@ struct SearchableCityItem: Searchable {
     }
 }
 
-@MainActor
-final class AutoCompleteObject: ObservableObject {
-    
-    @Published var suggestions: [SearchableCityItem] = []
-    
-    // define an index dedicated to a search by City
-    private var trieIndex: TrieDatastruct<SearchableCityItem>? = nil
-    
-    func update(dataModel: DataModel) {
-        Task {
-            trieIndex = buildIndex(dataModel: dataModel)
-        }
+
+actor AutoCompleteIndexBuilder<I: SearchableIndex> where I.S == SearchableCityItem{
+     
+    func build(from dataModel: DataModel) -> some SearchableIndex {
+        let index = self.buildIndex(dataModel: dataModel)
+        print("Size: \(index.calculateSize())")
+        print("Nodes: \(index.countNodes())")
+        return index
     }
     
-    private func buildIndex(dataModel: DataModel) -> TrieDatastruct<SearchableCityItem> {
+    private func buildIndex(dataModel: DataModel) -> some SearchableIndex  {
         let entries = dataModel.entries()
-        let trieIndex = TrieDatastruct<SearchableCityItem>()
+        let trieIndex = I()
         let tstart = Date.now
         for entry in entries {
-            let keywords = keywords(from: entry.city).map { String($0) }
-            
-            trieIndex.insert(
-                SearchableCityItem(
-                    city: entry.city,
-                    department: entry.department,
-                    circo: entry.circo,
-                    keywords: keywords))
+            // TODO adding departement as below has a very bad effect on the performances
+            let kwords = keywordsTokenizer(from: entry.city).union(keywordsTokenizer(from: entry.department)).map { String($0) }
+            //            let kwords = keywords(from: entry.city).map { String($0) }
+
+            let newItem =  SearchableCityItem(
+                city: entry.city,
+                department: entry.department,
+                circo: entry.circo,
+                keywords: kwords)
+
+            trieIndex.insert(newItem)
         }
         print("\(Date.now.timeIntervalSince(tstart)) to build an index of \(entries.count) entries")
         
         return trieIndex
     }
-    
-    func autocomplete(_ search: String) {
-        guard !search.isEmpty, let trieIndex = trieIndex else { return }
+}
 
-        suggestions = trieIndex.search(keywords(from: search).map { String($0) })
+
+@MainActor
+final class AutoCompleteObject<I: SearchableIndex>: ObservableObject where I.S == SearchableCityItem {
+    
+    @Published var suggestions: [SearchableCityItem] = []
+    
+    private var trieIndex: I?
+    
+    func update(dataModel: DataModel) async {
+        trieIndex = await AutoCompleteIndexBuilder<I>().build(from: dataModel) as? I
     }
     
-    let separators: [Character] = [" ", "'", "-"]
-    
-    private func keywords(from text: String) -> [Substring] {
-        let tokens =
-            (text as NSString)
-                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil)
-                .split { char in
-                    separators.contains(char)
-                }
-        return tokens
+    func autocomplete(_ search: String) {
+        suggestions.removeAll()
+        guard !search.isEmpty, let trieIndex = trieIndex else { return }
+        suggestions = trieIndex.search(keywordsTokenizer(from: search).map { String($0) })
     }
 }

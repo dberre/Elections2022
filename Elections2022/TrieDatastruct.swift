@@ -7,19 +7,16 @@
 
 import Foundation
 
-protocol Searchable: Hashable {
-    var keywords: [String] { get }
-}
+class TrieDatastruct<S: Searchable>: SearchableIndex {
+    
+    lazy var nodes = [Character: TrieDatastruct<S>]()
+    lazy var items = [S]()
 
-class TrieDatastruct<T: Searchable> {
-    lazy var nodes = [Character: TrieDatastruct<T>]()
-    lazy var items = [T]()
-
-    public init() { }
+    public required init() { }
 
     // MARK: - Insert / index
 
-    public func insert(_ object: T) {
+    public func insert(_ object: S) {
         for string in object.keywords {
             var tokens = tokenize(string)
             var currentIndex = 0
@@ -31,13 +28,13 @@ class TrieDatastruct<T: Searchable> {
     private func insert(tokens: inout [Character],
                         at currentIndex: inout Int,
                         max maxIndex: inout Int,
-                        object: T) {
+                        object: S) {
         if currentIndex < maxIndex {
             let current = tokens[currentIndex]
             currentIndex += 1
 
             if nodes[current] == nil {
-                nodes[current] = TrieDatastruct<T>()
+                nodes[current] = TrieDatastruct<S>()
             }
 
             nodes[current]?.insert(tokens: &tokens, at: &currentIndex, max: &maxIndex, object: object)
@@ -46,7 +43,7 @@ class TrieDatastruct<T: Searchable> {
         }
     }
 
-    public func insert(_ set: [T]) {
+    public func insert(_ set: [S]) {
         for object in set {
             insert(object)
         }
@@ -54,11 +51,11 @@ class TrieDatastruct<T: Searchable> {
 
     // MARK: - Search
 
-    public func search(_ keywords: [String]) -> [T] {
-        var merged: Set<T>?
+    public func search(_ keywords: [String]) -> [S] {
+        var merged: Set<S>?
 
         for word in keywords {
-            var wordResults = Set<T>()
+            var wordResults = Set<S>()
             var tokens = tokenize(word)
             var maxIndex = tokens.count
             var currentIndex = 0
@@ -75,11 +72,43 @@ class TrieDatastruct<T: Searchable> {
         }
         return []
     }
+    
+    public func calculateSize() -> Int {
+        calculateTrieSize(item: self)
+    }
+    
+    public func countNodes() -> Int {
+        countNodesR(self)
+    }
+    
+    private func calculateTrieSize(item: TrieDatastruct<S>) -> Int {
+        var size: Int = 0
+        
+        size += MemoryLayout.size(ofValue: item.nodes)
+        size += MemoryLayout.size(ofValue: item.items)
+
+        for subItem in items {
+            size += MemoryLayout.size(ofValue: subItem)
+        }
+        
+        for subNode in item.nodes.values {
+            size += calculateTrieSize(item: subNode)
+        }
+        return size
+    }
+    
+    private func countNodesR(_ item: TrieDatastruct<S>) -> Int {
+        var count: Int = 1
+        for subNode in item.nodes.values {
+            count += countNodesR(subNode)
+        }
+        return count
+    }
 
     private func find(tokens: inout [Character],
                       at currentIndex: inout Int,
                       max maxIndex: inout Int,
-                      into results: inout Set<T>) {
+                      into results: inout Set<S>) {
         if currentIndex < maxIndex {
             let current = tokens[currentIndex]
             currentIndex += 1
@@ -89,7 +118,7 @@ class TrieDatastruct<T: Searchable> {
         }
     }
 
-    func insertAll(into results: inout Set<T>) {
+    func insertAll(into results: inout Set<S>) {
         for t in items {
             results.insert(t)
         }
